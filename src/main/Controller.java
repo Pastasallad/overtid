@@ -18,7 +18,6 @@ import java.util.ResourceBundle;
 public class Controller implements Initializable {
 
     private final String DATUM = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE).toString();
-    private final String TAGFORSENING = "T\\\\u229\\\\'e5gf\\\\u246\\\\'f6rsening "; //RTF-format för Tågförsening
 
     @FXML private TextField txtDatum;
     @FXML private TextField txtFilnamn;
@@ -56,7 +55,7 @@ public class Controller implements Initializable {
         });
     }
 
-    private void skapaDokument(Event event) {
+    public void skapaDokument(Event event) {
         // Hämtar data från textArea
         String[][] punktlighet = getPunktlighet();
 
@@ -68,12 +67,13 @@ public class Controller implements Initializable {
             komp = "P";
         }
 
+        String tagforsening = "T\\\\u229\\\\'e5gf\\\\u246\\\\'f6rsening "; //RTF-format för Tågförsening
+
         ArrayList<Blankett> blanketter = new ArrayList<>();
         Blankett lapp = null;
         int counter = 6;
         if (punktlighet.length > 0) {
             try {
-
                 for (int i = punktlighet.length - 1; i > -1; i--) {
                     if (counter == 6) {
                         lapp = skapaNyBlankett();
@@ -88,7 +88,7 @@ public class Controller implements Initializable {
                         lapp.replace("TOM" + counter, punktlighet[i][4]);
                         lapp.replace("KOMP" + counter, komp);
                         lapp.replace("VANK" + counter, punktlighet[i][5]);
-                        lapp.replace("OVR" + counter, TAGFORSENING + punktlighet[i][6]);
+                        lapp.replace("OVR" + counter, tagforsening + punktlighet[i][6]);
                         counter++;
                     }
                 }
