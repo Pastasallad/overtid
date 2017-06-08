@@ -17,19 +17,18 @@ import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
 
-    final String DATUM = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE).toString();
-    final String TAGFORSENING = "T\\\\u229\\\\'e5gf\\\\u246\\\\'f6rsening "; //RTF-format för Tågförsening
+    private final String DATUM = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE).toString();
+    private final String TAGFORSENING = "T\\\\u229\\\\'e5gf\\\\u246\\\\'f6rsening "; //RTF-format för Tågförsening
 
-    @FXML TextField txtDatum;
-    @FXML TextField txtFilnamn;
-    @FXML TextField txtNamn;
-    @FXML TextField txtAnstNr;
-    @FXML TextField txtKostnad;
-    @FXML TextField txtOrt;
-    @FXML TextField txtPersonNr;
-    @FXML TextArea txtArea;
-    @FXML RadioButton radioTid;
-    @FXML RadioButton radioPengar;
+    @FXML private TextField txtDatum;
+    @FXML private TextField txtFilnamn;
+    @FXML private TextField txtNamn;
+    @FXML private TextField txtAnstNr;
+    @FXML private TextField txtKostnad;
+    @FXML private TextField txtOrt;
+    @FXML private TextField txtPersonNr;
+    @FXML private TextArea txtArea;
+    @FXML private RadioButton radioTid;
 
 
     public void initialize(URL url, ResourceBundle rb){
@@ -39,7 +38,7 @@ public class Controller implements Initializable {
 
     }
 
-    public void setAnstNrFocusListener() {
+    private void setAnstNrFocusListener() {
         txtAnstNr.focusedProperty().addListener(new ChangeListener<Boolean>()
         {
             @Override
@@ -57,7 +56,7 @@ public class Controller implements Initializable {
         });
     }
 
-    public void skapaDokument(Event event) {
+    private void skapaDokument(Event event) {
         // Hämtar data från textArea
         String[][] punktlighet = getPunktlighet();
 
@@ -69,41 +68,43 @@ public class Controller implements Initializable {
             komp = "P";
         }
 
-        ArrayList<Blankett> blanketter = new ArrayList<Blankett>();
+        ArrayList<Blankett> blanketter = new ArrayList<>();
         Blankett lapp = null;
         int counter = 6;
-        try {
-            for (int i = 0; i < punktlighet.length; i++) {
-                if (counter == 6) {
-                    lapp = skapaNyBlankett();
-                    blanketter.add(lapp);
-                    counter = 1;
-                }
-                if (Integer.parseInt(punktlighet[i][6]) < 0) {
-                    lapp.replace("DATUM" + counter, punktlighet[i][0].substring(2));
-                    lapp.replace("TUR" + counter, punktlighet[i][1]);
-                    lapp.replace("TAGNR" + counter, punktlighet[i][2]);
-                    lapp.replace("FROM" + counter, punktlighet[i][3]);
-                    lapp.replace("TOM" + counter, punktlighet[i][4]);
-                    lapp.replace("KOMP" + counter, komp);
-                    lapp.replace("VANK" + counter, punktlighet[i][5]);
-                    lapp.replace("OVR" + counter, TAGFORSENING + punktlighet[i][6]);
-                    counter++;
-                }
-            }
+        if (punktlighet.length > 0) {
+            try {
 
-            // Spara blanketter till fil
-            for (Blankett lappar : blanketter) {
-                lappar.removePlaceHolders();
-                lappar.printFile(txtFilnamn.getText());
+                for (int i = punktlighet.length - 1; i > -1; i--) {
+                    if (counter == 6) {
+                        lapp = skapaNyBlankett();
+                        blanketter.add(lapp);
+                        counter = 1;
+                    }
+                    if (Integer.parseInt(punktlighet[i][6]) < 0) {
+                        lapp.replace("DATUM" + counter, punktlighet[i][0].substring(2));
+                        lapp.replace("TUR" + counter, punktlighet[i][1]);
+                        lapp.replace("TAGNR" + counter, punktlighet[i][2]);
+                        lapp.replace("FROM" + counter, punktlighet[i][3]);
+                        lapp.replace("TOM" + counter, punktlighet[i][4]);
+                        lapp.replace("KOMP" + counter, komp);
+                        lapp.replace("VANK" + counter, punktlighet[i][5]);
+                        lapp.replace("OVR" + counter, TAGFORSENING + punktlighet[i][6]);
+                        counter++;
+                    }
+                }
+
+                // Spara blanketter till fil
+                for (Blankett lappar : blanketter) {
+                    lappar.removePlaceHolders();
+                    lappar.printFile(txtFilnamn.getText());
+                }
+            } catch (Exception ex) {
+                System.out.println("FEL PUNKTLIGHET " + ex);
             }
-        } catch (Exception ex) {
-            System.out.println("FEL PUNKTLIGHET " + ex);
         }
-
     }
 
-    public Blankett skapaNyBlankett() {
+    private Blankett skapaNyBlankett() {
         // Skapar ny blankett och fyller i överdelen
         Blankett lapp = new Blankett();
         lapp.replace("NAMN", txtNamn.getText());
@@ -116,7 +117,7 @@ public class Controller implements Initializable {
         return lapp;
     }
 
-    public String[][] getPunktlighet() {
+    private String[][] getPunktlighet() {
         try {
             String input = txtArea.getText();
             String[] rad = input.split("\n");

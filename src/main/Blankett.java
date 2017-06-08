@@ -10,26 +10,24 @@ import java.nio.file.Paths;
 /**
  * Klass som hämtar blankett-mallen och sköter ändringar av platshållare.
  */
-public class Blankett {
+class Blankett {
     private String blankett;
 
-    public Blankett() {
-        blankett = readFile("/mall.rtf");
+    Blankett() {
+        blankett = readFile();
     }
 
-    public void replace(String remove, String add) {
-        String update = blankett.replaceFirst("%%" + remove + "%%", add);
-        blankett = update;
+    void replace(String remove, String add) {
+        blankett = blankett.replaceFirst("%%" + remove + "%%", add);
     }
 
-    public void removePlaceHolders() {
-        String update = blankett.replaceAll("\\%%.*?\\%% ?", "");
-        blankett = update;
+    void removePlaceHolders() {
+        blankett = blankett.replaceAll("\\%%.*?\\%% ?", "");
     }
 
-    public String readFile(String path) {
+    private String readFile() {
         try {
-            InputStream in = this.getClass().getResourceAsStream(path);
+            InputStream in = this.getClass().getResourceAsStream("/mall.rtf");
 
             ByteArrayOutputStream result = new ByteArrayOutputStream();
             byte[] buffer = new byte[1024];
@@ -39,12 +37,12 @@ public class Blankett {
             }
             return result.toString("UTF-8");
         } catch (Exception ex) {
-            System.out.println(ex);
+            System.out.print("ERROR " + ex);
             return null;
         }
     }
 
-    public void printFile(String filename) {
+    void printFile(String filename) {
         String pathString = filename + ".rtf";
         int i = 2;
         while (Files.exists(Paths.get(pathString))) {
