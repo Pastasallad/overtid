@@ -10,27 +10,37 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 
 import java.net.URL;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
 
-    private final String DATUM = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE).toString();
-
-    @FXML private TextField txtDatum;
-    @FXML private TextField txtFilnamn;
-    @FXML private TextField txtNamn;
-    @FXML private TextField txtAnstNr;
-    @FXML private TextField txtKostnad;
-    @FXML private TextField txtOrt;
-    @FXML private TextField txtPersonNr;
-    @FXML private TextArea txtArea;
-    @FXML private RadioButton radioTid;
+    private final String DATUM = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
 
 
-    public void initialize(URL url, ResourceBundle rb){
+    @FXML
+    private TextField txtDatum;
+    @FXML
+    private TextField txtFilnamn;
+    @FXML
+    private TextField txtNamn;
+    @FXML
+    private TextField txtAnstNr;
+    @FXML
+    private TextField txtKostnad;
+    @FXML
+    private TextField txtOrt;
+    @FXML
+    private TextField txtPersonNr;
+    @FXML
+    private TextArea txtArea;
+    @FXML
+    private RadioButton radioTid;
+
+
+    public void initialize(URL url, ResourceBundle rb) {
         txtDatum.setText(DATUM);
         txtFilnamn.setText("Overtid-" + DATUM);
         setAnstNrFocusListener();
@@ -38,69 +48,64 @@ public class Controller implements Initializable {
     }
 
     private void setAnstNrFocusListener() {
-        txtAnstNr.focusedProperty().addListener(new ChangeListener<Boolean>()
-        {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> arg0, Boolean oldPropertyValue, Boolean newPropertyValue)
+        txtAnstNr.focusedProperty().addListener((arg0, oldPropertyValue, newPropertyValue) -> {
+            if (newPropertyValue && txtAnstNr.getText().isEmpty()) // Fokus
             {
-                if (newPropertyValue && txtAnstNr.getText().isEmpty()) // Fokus
-                {
-                    txtAnstNr.setText("100 100 ");
-                }
-                else if (txtAnstNr.getText().equals("100 100 ")) // Ej fokus
-                {
-                        txtAnstNr.setText("");
-                }
+                txtAnstNr.setText("100 100 ");
+            } else if (txtAnstNr.getText().equals("100 100 ")) // Ej fokus
+            {
+                txtAnstNr.setText("");
             }
         });
     }
 
     public void skapaDokument(Event event) {
-        // Hämtar data från textArea
-        String[][] punktlighet = getPunktlighet();
-
-        // Tid eller pengar
-        String komp;
-        if (radioTid.isSelected()) {
-            komp = "T";
-        } else {
-            komp = "P";
-        }
 
         String tagforsening = "T\\\\u229\\\\'e5gf\\\\u246\\\\'f6rsening "; //RTF-format för Tågförsening
 
-        ArrayList<Blankett> blanketter = new ArrayList<>();
-        Blankett lapp = null;
-        int counter = 6;
-        if (punktlighet.length > 0) {
-            try {
-                for (int i = punktlighet.length - 1; i > -1; i--) {
-                    if (counter == 6) {
-                        lapp = skapaNyBlankett();
-                        blanketter.add(lapp);
-                        counter = 1;
-                    }
-                    if (Integer.parseInt(punktlighet[i][6]) < 0) {
-                        lapp.replace("DATUM" + counter, punktlighet[i][0].substring(2));
-                        lapp.replace("TUR" + counter, punktlighet[i][1]);
-                        lapp.replace("TAGNR" + counter, punktlighet[i][2]);
-                        lapp.replace("FROM" + counter, punktlighet[i][3]);
-                        lapp.replace("TOM" + counter, punktlighet[i][4]);
-                        lapp.replace("KOMP" + counter, komp);
-                        lapp.replace("VANK" + counter, punktlighet[i][5]);
-                        lapp.replace("OVR" + counter, tagforsening + punktlighet[i][6]);
-                        counter++;
-                    }
-                }
+        try {
+        // Hämtar data från textArea
+        String[][] punktlighet = getPunktlighet();
+        if (punktlighet[0][6] != null) {
+            ArrayList<Blankett> blanketter = new ArrayList<>();
+            Blankett lapp = null;
+            int counter = 6;
 
-                // Spara blanketter till fil
-                for (Blankett lappar : blanketter) {
-                    lappar.removePlaceHolders();
-                    lappar.printFile(txtFilnamn.getText());
-                }
-            } catch (Exception ex) {
-                System.out.println("FEL PUNKTLIGHET " + ex);
+            // Tid eller pengar
+            String komp;
+            if (radioTid.isSelected()) {
+                komp = "T";
+            } else {
+                komp = "P";
             }
+
+            for (int i = punktlighet.length - 1; i > -1; i--) {
+                if (counter == 6) {
+                    lapp = skapaNyBlankett();
+                    blanketter.add(lapp);
+                    counter = 1;
+                }
+                if (punktlighet[i][6] != null && Integer.parseInt(punktlighet[i][6]) < 0) {
+                    lapp.replace("DATUM" + counter, punktlighet[i][0].substring(2)); // YYYY-MM-DD > YY-MM-DD
+                    lapp.replace("TUR" + counter, punktlighet[i][1]);
+                    lapp.replace("TAGNR" + counter, punktlighet[i][2]);
+                    lapp.replace("FROM" + counter, punktlighet[i][3]);
+                    lapp.replace("TOM" + counter, punktlighet[i][4]);
+                    lapp.replace("KOMP" + counter, komp);
+                    lapp.replace("VANK" + counter, punktlighet[i][5]);
+                    lapp.replace("OVR" + counter, tagforsening + punktlighet[i][6]);
+                    counter++;
+                }
+            }
+
+            // Spara blanketter till fil
+            for (Blankett lappar : blanketter) {
+                lappar.removePlaceHolders();
+                lappar.printFile(txtFilnamn.getText());
+            }
+        }
+        } catch (Exception ex) {
+            System.out.println("FEL PUNKTLIGHET " + ex);
         }
     }
 
@@ -118,21 +123,14 @@ public class Controller implements Initializable {
     }
 
     private String[][] getPunktlighet() {
-        try {
-            String input = txtArea.getText();
-            String[] rad = input.split("\n");
-            String[][] punktlighet = new String[rad.length][7];
-            for (int i = 0; i < rad.length; i++) {
-                String[] delar = rad[i].split("\t");
-                for (int j = 0; j < delar.length; j++) {
-                    punktlighet[i][j] = delar[j];
-                }
-            }
-            return punktlighet;
-        } catch (Exception e) {
-            System.out.print("FEL VID INLÄSNING " + e);
-            return null;
+        String input = txtArea.getText();
+        String[] rad = input.split("\n");
+        String[][] punktlighet = new String[rad.length][7];
+        for (int i = 0; i < rad.length; i++) {
+            String[] delar = rad[i].split("\t");
+            System.arraycopy(delar, 0, punktlighet[i], 0, delar.length);
         }
+        return punktlighet;
     }
 
 }
